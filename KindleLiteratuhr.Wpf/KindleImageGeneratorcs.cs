@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -44,37 +45,26 @@ namespace KindleLiteratuhr.Wpf
 
 
             var csvReader = new CsvReader();
-            int count = 1;
-
-            var timeList = new Dictionary<string, int>();
+            var timeList = new ConcurrentDictionary<string, int>();
 
             var startTime = DateTime.Now;
             Console.WriteLine("Start: {0}", startTime.ToLongTimeString());
 
             var timeDatas = csvReader.ReadFile(csvFile);
 
-            Parallel.ForEach(timeDatas, timeData =>
+            Parallel.ForEach(timeDatas, (timeData, state, index) =>
             {
                 var image = GenerateImage(timeData);
 
-                int lfdNr = 0;
-                if (!timeList.ContainsKey(timeData.Time))
-                {
-                    timeList.Add(timeData.Time, 1);
-                }
-                else
-                {
-                    lfdNr = timeList[timeData.Time];
-                    lfdNr++;
-                    timeList[timeData.Time] = lfdNr;
-                }
-
+                // laufende Nummer pro Zeit ermitteln
+                int lfdNr = timeList.AddOrUpdate(timeData.Time, 0, (key, oldValue) => oldValue + 1);
+                // Dateiname zusammenbauen
                 string filename = $"quote_{timeData.Time.Remove(2, 1)}_{lfdNr}.png";
                 string file = Path.Combine(outputDirectory, filename);
 
                 SaveImage(image, file);
 
-                Console.WriteLine($"{count++} {timeData.Time}");
+                Console.WriteLine($"{index,4} {timeData.Time}: {filename}");
             });
 
             var endTime = DateTime.Now;
