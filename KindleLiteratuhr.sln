@@ -3,7 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KindleLiteratuhr", "KindleLiteratuhr\KindleLiteratuhr.csproj", "{1716AB93-038A-45E0-B282-735115F0C510}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KindleLiteratuhr.Core", "KindleLiteratuhr.Core\KindleLiteratuhr.Core.csproj", "{195C5EB4-D439-4EB3-B8BE-D02B752A83AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KindleLiteratuhr.Wpf", "KindleLiteratuhr.Wpf\KindleLiteratuhr.Wpf.csproj", "{FDC8D57C-2985-4C37-AE81-36230EA8C078}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KindleLiteratuhr.Common", "KindleLiteratuhr.Common\KindleLiteratuhr.Common.csproj", "{1D8C371D-ECA2-47F8-86A4-6E17778B2BAB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{C451AA2B-9C8F-4FF6-8FB8-E9841A0D3902}"
+	ProjectSection(SolutionItems) = preProject
+		Resources\LinLibertine_RZah.ttf = Resources\LinLibertine_RZah.ttf
+		Resources\LinLibertine_RZIah.ttf = Resources\LinLibertine_RZIah.ttf
+		Resources\litclock_annotated.csv = Resources\litclock_annotated.csv
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +22,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1716AB93-038A-45E0-B282-735115F0C510}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1716AB93-038A-45E0-B282-735115F0C510}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1716AB93-038A-45E0-B282-735115F0C510}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1716AB93-038A-45E0-B282-735115F0C510}.Release|Any CPU.Build.0 = Release|Any CPU
+		{195C5EB4-D439-4EB3-B8BE-D02B752A83AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{195C5EB4-D439-4EB3-B8BE-D02B752A83AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{195C5EB4-D439-4EB3-B8BE-D02B752A83AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{195C5EB4-D439-4EB3-B8BE-D02B752A83AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDC8D57C-2985-4C37-AE81-36230EA8C078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDC8D57C-2985-4C37-AE81-36230EA8C078}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDC8D57C-2985-4C37-AE81-36230EA8C078}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDC8D57C-2985-4C37-AE81-36230EA8C078}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D8C371D-ECA2-47F8-86A4-6E17778B2BAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D8C371D-ECA2-47F8-86A4-6E17778B2BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D8C371D-ECA2-47F8-86A4-6E17778B2BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D8C371D-ECA2-47F8-86A4-6E17778B2BAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
