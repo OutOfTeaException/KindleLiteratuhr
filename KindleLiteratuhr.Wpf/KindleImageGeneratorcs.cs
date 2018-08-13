@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -47,7 +48,12 @@ namespace KindleLiteratuhr.Wpf
 
             var timeList = new Dictionary<string, int>();
 
-            foreach (var timeData in csvReader.ReadFile(csvFile))
+            var startTime = DateTime.Now;
+            Console.WriteLine("Start: {0}", startTime.ToLongTimeString());
+
+            var timeDatas = csvReader.ReadFile(csvFile);
+
+            Parallel.ForEach(timeDatas, timeData =>
             {
                 var image = GenerateImage(timeData);
 
@@ -69,7 +75,12 @@ namespace KindleLiteratuhr.Wpf
                 SaveImage(image, file);
 
                 Console.WriteLine($"{count++} {timeData.Time}");
-            }
+            });
+
+            var endTime = DateTime.Now;
+            Console.WriteLine("Ende: {0}", endTime.ToLongTimeString());
+            Console.WriteLine("Dauer: {0}", (endTime - startTime));
+            Console.ReadLine();
         }
 
         private void SaveImage(BitmapSource image, string file)
