@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -75,9 +74,11 @@ namespace KindleLiteratuhr.Wpf
 
         private void SaveImage(BitmapSource image, string file)
         {
-            // Encode the RenderBitmapTarget as a PNG file.
+            // Bild mit 8-Bit Farbtiefe speichern (Graustufen)
             var pngEncoder = new PngBitmapEncoder();
-            pngEncoder.Frames.Add(BitmapFrame.Create(image));
+            var image8bit = new FormatConvertedBitmap(image, PixelFormats.Gray8, null, 0.0);
+            pngEncoder.Frames.Add(BitmapFrame.Create(image8bit));
+
             using (Stream fileStream = File.Create(file))
             {
                 pngEncoder.Save(fileStream);
