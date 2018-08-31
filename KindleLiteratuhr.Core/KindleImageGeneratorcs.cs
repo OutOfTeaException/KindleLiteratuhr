@@ -134,7 +134,7 @@ namespace KindleLiteratuhr.Core
             string renderedText = timeData.Footer;
             SizeF footerSize;
 
-            const double TEXT_HEIGHT = FONTSIZE_FOOTER + 7;
+            const double TEXT_HEIGHT = FONTSIZE_FOOTER * 1.15f;
 
             var options = new RendererOptions(fontFooter)
             {
@@ -145,13 +145,13 @@ namespace KindleLiteratuhr.Core
 
             footerSize = TextMeasurer.Measure(renderedText, options);
 
-            if (footerSize.Height > TEXT_HEIGHT)
+            if (footerSize.Height > TEXT_HEIGHT * 1.5)
             {
                 renderedText = timeData.Book + Environment.NewLine + timeData.Author;
 
                 footerSize = TextMeasurer.Measure(renderedText, options);
 
-                if (footerSize.Height > TEXT_HEIGHT * 2)
+                if (footerSize.Height > TEXT_HEIGHT * 2.5)
                 {
                     renderedText = $"{timeData.Book}, {timeData.Author}";
                     footerSize = TextMeasurer.Measure(renderedText, options);
