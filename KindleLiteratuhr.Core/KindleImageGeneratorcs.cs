@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using KindleLiteratuhr.Common;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.Primitives;
@@ -9,13 +14,14 @@ using SixLabors.Shapes;
 
 namespace KindleLiteratuhr.Core
 {
-    public class KindleImageGenerator
+    public partial class KindleImageGenerator
     {
         private static Font fontText;
         private static Font fontFooter;
         private const float FONTSIZE_FOOTER = 23;
         private readonly string csvFile;
         private readonly string outputDirectory;
+        private static Object dictionaryLock = new Object();
 
         public KindleImageGenerator(string csvFile, string outputDirectory)
         {
@@ -33,24 +39,10 @@ namespace KindleLiteratuhr.Core
 
         public void GenerateImages()
         {
-            // For Testing:
-            var timeData = new TimeData
-            {
-                Time = "00:00",
-                TimeInText = "midnight",
-                Text = "The first night, as soon as the corporal midnight had conducted my uncle Toby up stairs, which was about 10 - Mrs. Wadman threw herself into her arm chair, and crossing her left knee with her right, which formed a resting-place for her elbow, she reclin'd her cheek upon the palm of her hand, and leaning forwards, ruminated until midnight upon both sides of the question.'",
-                Author = "Laurence Sterne",
-                Book = "The Life  and Opinions of Tristram Shandy"
-            };
+            Directory.CreateDirectory(outputDirectory);
 
-            using (var image = GenerateImage(timeData))
-            {
-                SaveImage(image, @"c:\temp\test_core.png");
-            }
-
-            /*
             var csvReader = new CsvReader();
-            var timeList = new ConcurrentDictionary<string, int>();
+            var timeList = new Dictionary<string, int>();
 
             var startTime = DateTime.Now;
             Console.WriteLine("Start: {0}", startTime.ToLongTimeString());
@@ -58,31 +50,48 @@ namespace KindleLiteratuhr.Core
             var timeDatas = csvReader.ReadFile(csvFile);
 
             Parallel.ForEach(timeDatas, (timeData, state, index) =>
-            {
-                using (var image = GenerateImage(timeData))
-                {
-                    // laufende Nummer pro Zeit ermitteln
-                    int lfdNr = timeList.AddOrUpdate(timeData.Time, 0, (key, oldValue) => oldValue + 1);
-                    // Dateiname zusammenbauen
-                    string filename = $"quote_{timeData.Time.Remove(2, 1)}_{lfdNr}.png";
-                    string file = Path.Combine(outputDirectory, filename);
+             {
+                 using (var image = GenerateImage(timeData))
+                 {
+                     // laufende Nummer pro Zeit ermitteln
+                     int lfdNr = 0;
+                     lock (dictionaryLock)
+                     {
+                         if (!timeList.ContainsKey(timeData.Time))
+                         {
+                             timeList.Add(timeData.Time, lfdNr);
+                         }
+                         else
+                         {
+                             lfdNr = timeList[timeData.Time];
+                             lfdNr++;
+                             timeList[timeData.Time] = lfdNr;
+                         }
+                     }
 
-                    SaveImage(image, file);
-                }
+                     // Dateiname zusammenbauen
+                     string filename = $"quote_{timeData.Time.Remove(2, 1)}_{lfdNr}.png";
+                     string file = System.IO.Path.Combine(outputDirectory, filename);
+                     Console.WriteLine($"{index,4} {timeData.Time}: {filename}");
 
-                Console.WriteLine($"{index,4} {timeData.Time}: {filename}");
-            });
+                     SaveImage(image, file);
+                 }
+             });
 
             var endTime = DateTime.Now;
-            Console.WriteLine("Ende: {0}", endTime.ToLongTimeString());
-            Console.WriteLine("Dauer: {0}", (endTime - startTime));
+            Console.WriteLine("End: {0}", endTime.ToLongTimeString());
+            Console.WriteLine("Duration: {0}", (endTime - startTime));
             Console.ReadLine();
-            */
         }
 
         private void SaveImage(Image<Rgba32> image, string file)
         {
-            image.Save(file);
+            var pngEncoder = new PngEncoder
+            {
+                BitDepth = PngBitDepth.Bit8,
+                ColorType = PngColorType.Grayscale
+            };
+            image.Save(file, pngEncoder);
         }
 
         private Image<Rgba32> GenerateImage(TimeData timeData)
@@ -93,46 +102,29 @@ namespace KindleLiteratuhr.Core
             }
 
             var imageSize = new Rectangle(0, 0, 600, 800);
-            var textSize = new Rectangle(0, 0, 540, 690);
-            var textMargin = new Point(30, 20);
-            var footerLocation = new Point(textMargin.X + 10, imageSize.Height - textMargin.Y);
-
-            float optimalFontSize = GetOptimalFontSize(timeData, textSize);
-            var textFont = new Font(fontText, optimalFontSize);
-            var textRendererOptions = new RendererOptions(textFont)
-            {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                WrappingWidth = textSize.Width,
-                Origin = textMargin
-            };
-
-            var textGlyphs = TextBuilder.GenerateGlyphs(timeData.Text, textRendererOptions);
-            var textGlyphsTime = TextBuilder.GenerateGlyphs(timeData.Text.Substring(timeData.TimeInTextPosition, timeData.TimeInText.Length), new RendererOptions(textFont)
-            {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
-                WrappingWidth = textSize.Width
-                //Origin = new PointF(textGlyphs.Last().Bounds.Right, textGlyphs.Last().Bounds.Top)
-            });
+            var textSize = new Rectangle(30, 20, 545, 690);
+            var footerSize = new Rectangle(30, imageSize.Height - textSize.Y, 580, 100);
+            var footerLocation = new Point(footerSize.X, footerSize.Y);
+               
+            var textFont = new Font(fontText, 120);
 
             var footerText = CreateFooter(timeData, textSize);
             var footerOptions = new RendererOptions(fontFooter)
             {
                 HorizontalAlignment = HorizontalAlignment.Right,
                 VerticalAlignment = VerticalAlignment.Bottom,
-                WrappingWidth = textSize.Width,
+                WrappingWidth = 550,
                 Origin = footerLocation
             };
             var footerGlyphs = TextBuilder.GenerateGlyphs(footerText.text, footerOptions);
 
             var image = new Image<Rgba32>(Configuration.Default, 600, 800, Rgba32.White);
             
-            image.Mutate(ctx => ctx
-                .Fill(Rgba32.Gray, textGlyphs)
-                //.Fill(Rgba32.Black, textGlyphsTime)
-                .Fill(Rgba32.Black, footerGlyphs)
-                );
+            image.Mutate(ctx =>
+            {
+                DrawText(timeData, textFont, textSize, ctx);
+                ctx.Fill(Rgba32.Black, footerGlyphs);
+            });
 
             return image;
         }
@@ -169,25 +161,61 @@ namespace KindleLiteratuhr.Core
             return (renderedText, (int)footerSize.Height);
         }
 
-        private float GetOptimalFontSize(TimeData timeData, Rectangle textSize)
+        private void DrawText(TimeData timeData, Font baseFont, Rectangle textSize, IImageProcessingContext<Rgba32> image)
         {
-            float fontSize = 120;
+            int fontSize = 120;
+            var textGenerator = new TextGenererator();
 
             while (true)
             {
-                var testFont = new Font(fontText, fontSize);
-                var options = new RendererOptions(testFont)
+                Font font = new Font(baseFont, fontSize);
+                Font fontBold = new Font(baseFont, fontSize, FontStyle.Bold);
+                var options = new RendererOptions(font)
                 {
-                    WrappingWidth = textSize.Width,
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Top
                 };
+                float spaceWidth = TextMeasurer.Measure(" ", options).Width;
+                float lineHeight = font.Size * 1.15f;
 
-                var size = TextMeasurer.Measure(timeData.Text, options);
+                var text = textGenerator.GenerateText(timeData, textSize.Width, font);
+                float height =  text.Lines.Count() * lineHeight;
+                float maxLineWidth = text.Lines.Select(l => l.Width).Max();
 
-                if (size.Height < textSize.Height)
+                // Solange die Font Groesse verringern, bis der Text passt.
+                if (height < textSize.Height && maxLineWidth <= textSize.Width)
                 {
-                    return fontSize;
+                    float y = textSize.Y;
+
+                    foreach (var line in text.Lines)
+                    {
+                        float x = textSize.X;
+
+                        foreach (var word in line.Words)
+                        {
+                            var location = new PointF(x, y);
+                            //System.Diagnostics.Debug.WriteLine($"{location}:'{word.Value}', {x + word.Width}");
+                            
+                            if (word.IsHighlight)
+                            {
+                                image.DrawText(word.Value, fontBold, Rgba32.Black, location);
+                            }
+                            else
+                            {
+                                image.DrawText(word.Value, font, Rgba32.Gray, location);
+                            }
+                            
+                            x += word.Width;
+                            if (word.SpaceAfter)
+                            {
+                                x += spaceWidth;
+                            }
+                        }
+
+                        y += lineHeight;
+                    }
+
+                    return;
                 }
 
                 fontSize--;
